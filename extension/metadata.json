@@ -1,0 +1,8 @@
+{
+  "uuid": "timely-brightness@misterd0ctor.github.io",
+  "name": "Timely Brightness",
+  "description": "Dims external monitors through DDC/CI as the sun sets, and brightens them again at sunrise. Needs ddcutil.",
+  "shell-version": ["50"],
+  "settings-schema": "org.gnome.shell.extensions.timely-brightness",
+  "gettext-domain": "timely-brightness"
+}

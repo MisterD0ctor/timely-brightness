@@ -1,0 +1,10 @@
+.timely-brightness-graph {
+  min-width: 288px;
+  height: 128px;
+  -timely-curve-color: -st-accent-color;
+}
+
+.timely-brightness-caption {
+  font-size: 0.818em;
+  spacing: 12px;
+}

@@ -1,0 +1,52 @@
+#!/bin/sh
+# Stands in for ddcutil in headless runs, so testing never changes the real
+# monitors. Answers like the two monitors on this desk (buses 1 and 4), keeps
+# their brightness in $TIMELY_FAKE_DDC_DIR, and logs every call there.
+set -eu
+
+dir="${TIMELY_FAKE_DDC_DIR:?}"
+echo "$*" >>"$dir/calls.log"
+# Real calls take about half a second; the queueing in lib/ddc.js only gets
+# exercised if fake ones are slow too.
+sleep "${TIMELY_FAKE_DDC_DELAY:-0.4}"
+
+bus=""
+command=""
+value=""
+while [ $# -gt 0 ]; do
+    case "$1" in
+    --bus) bus="$2"; shift ;;
+    detect | getvcp) command="$1" ;;
+    setvcp) command="$1"; value="$3"; shift 2 ;;
+    esac
+    shift
+done
+
+case "$command" in
+detect)
+    cat <<'EOF'
+Display 1
+   I2C bus:          /dev/i2c-1
+   DRM connector:    card1-HDMI-A-1
+   drm_connector_id: 1217
+   Monitor:          MSI:MAG342CQRV:DB6H070A00372
+
+Display 2
+   I2C bus:          /dev/i2c-4
+   DRM connector:    card1-DP-3
+   drm_connector_id: 1230
+   Monitor:          DEL:AW3423DWF:GYC42S3
+
+EOF
+    ;;
+getvcp)
+    echo "VCP 10 C $(cat "$dir/bus-$bus" 2>/dev/null || echo 100) 100"
+    ;;
+setvcp)
+    echo "$value" >"$dir/bus-$bus"
+    ;;
+*)
+    echo "fake-ddcutil: unsupported call" >&2
+    exit 1
+    ;;
+esac

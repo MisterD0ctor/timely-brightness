@@ -1,0 +1,14 @@
+#!/bin/sh
+# Evaluates JavaScript in the headless shell from scripts/headless-shell.sh and
+# prints the result as JSON. Fails if the code throws.
+set -eu
+
+result=$(gdbus call --session --dest org.gnome.Shell --object-path /org/gnome/Shell \
+    --method org.gnome.Shell.Eval "$1")
+case "$result" in
+"(true, "*) printf '%s\n' "$result" | sed "s/^(true, '\(.*\)')\$/\1/" ;;
+*)
+    echo "shell-eval: $result" >&2
+    exit 1
+    ;;
+esac

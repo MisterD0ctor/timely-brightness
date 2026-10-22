@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="timely-brightness">
+  <schema id="org.gnome.shell.extensions.timely-brightness"
+          path="/org/gnome/shell/extensions/timely-brightness/">
+    <key name="latitude" type="d">
+      <range min="-90" max="90"/>
+      <default>59.33</default>
+      <summary>Latitude</summary>
+      <description>Degrees north (negative for south), for working out sunrise and sunset.</description>
+    </key>
+    <key name="longitude" type="d">
+      <range min="-180" max="180"/>
+      <default>18.07</default>
+      <summary>Longitude</summary>
+      <description>Degrees east (negative for west), for working out sunrise and sunset.</description>
+    </key>
+    <key name="auto" type="b">
+      <default>true</default>
+      <summary>Follow the sun</summary>
+      <description>Whether brightness follows the sun. Moving the slider turns this off until the next sunrise or sunset.</description>
+    </key>
+    <key name="resume-at" type="x">
+      <default>0</default>
+      <summary>When to follow the sun again</summary>
+      <description>Unix time at which "auto" turns itself back on, or 0 when it was switched off by hand.</description>
+    </key>
+    <key name="dusk-level" type="i">
+      <range min="0" max="100"/>
+      <default>60</default>
+      <summary>Dusk brightness</summary>
+      <description>Brightness, 0–100, at sunrise and sunset.</description>
+    </key>
+    <key name="night-level" type="i">
+      <range min="0" max="100"/>
+      <default>30</default>
+      <summary>Night brightness</summary>
+      <description>Brightness, 0–100, once civil twilight has ended.</description>
+    </key>
+    <key name="monitors" type="s">
+      <default>'{}'</default>
+      <summary>Monitor settings</summary>
+      <description>JSON object keyed by EDID id ("MFG:MODEL:SERIAL"). Each entry has "model", "connector", "enabled", and "lowest" and "highest": the monitor's brightness, in percent of its range, at levels 0 and 100.</description>
+    </key>
+  </schema>
+</schemalist>
