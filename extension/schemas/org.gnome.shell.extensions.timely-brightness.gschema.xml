@@ -14,6 +14,24 @@
       <summary>Longitude</summary>
       <description>Degrees east (negative for west), for working out sunrise and sunset.</description>
     </key>
+    <key name="morning-time" type="i">
+      <range min="0" max="1439"/>
+      <default>420</default>
+      <summary>Morning time</summary>
+      <description>Minutes after midnight that sunrise is pulled toward, by "rhythm-weight".</description>
+    </key>
+    <key name="evening-time" type="i">
+      <range min="0" max="1439"/>
+      <default>1140</default>
+      <summary>Evening time</summary>
+      <description>Minutes after midnight that sunset is pulled toward, by "rhythm-weight".</description>
+    </key>
+    <key name="rhythm-weight" type="i">
+      <range min="0" max="100"/>
+      <default>50</default>
+      <summary>Weight of the set times</summary>
+      <description>How far, in percent, sunrise and sunset are pulled toward "morning-time" and "evening-time". 0 follows the sun; 100 keeps to the set times.</description>
+    </key>
     <key name="auto" type="b">
       <default>true</default>
       <summary>Follow the sun</summary>

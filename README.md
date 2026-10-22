@@ -22,6 +22,19 @@ Brightness is worked out from the sun's elevation, on this computer:
 The fades therefore last as long as twilight does where you are: short near
 the equinoxes and long in a Nordic summer.
 
+Under **Daily Rhythm** in the preferences, sunrise is pulled toward a morning
+time and sunset toward an evening time, by a weight. Following the sun alone
+would dim screens mid-afternoon in a Nordic winter and keep them bright toward
+midnight in summer. Both work against a steady body clock. At the default
+50 % toward 07:00 and 19:00, Stockholm's sunset moves from 14:48 to 16:54 at
+midwinter and from 22:08 to 20:34 at midsummer. The time between two sunrises
+and sunsets is stretched or squeezed evenly, so each fade keeps its shape.
+
+Fades are followed in steps of 3 %. On some drivers (NVIDIA's, at least) every
+DDC/CI transfer briefly stalls the desktop, so fewer, larger steps mean fewer
+stalls. For the same reason, the slider sends its value once you pause or let
+go, not while it moves.
+
 Each monitor maps the 0–100 level onto its own range, set under **Monitors** in
 the preferences.
 

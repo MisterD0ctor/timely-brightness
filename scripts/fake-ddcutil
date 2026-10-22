@@ -1,13 +1,16 @@
 #!/bin/sh
 # Stands in for ddcutil in headless runs, so testing never changes the real
 # monitors. Answers like the two monitors on this desk (buses 1 and 4), keeps
-# their brightness in $TIMELY_FAKE_DDC_DIR, and logs every call there.
+# their brightness in $TIMELY_FAKE_DDC_DIR, and logs every call there:
+# calls.log has the arguments, timeline.log when each call began and ended.
 set -eu
 
 dir="${TIMELY_FAKE_DDC_DIR:?}"
 echo "$*" >>"$dir/calls.log"
-# Real calls take about half a second; the queueing in lib/ddc.js only gets
-# exercised if fake ones are slow too.
+echo "$(date +%s.%N) begin $*" >>"$dir/timeline.log"
+trap 'echo "$(date +%s.%N) end" >>"$dir/timeline.log"' EXIT
+# Real calls take 0.05–0.4 s; the queueing in lib/ddc.js only gets exercised
+# if fake ones are slow too.
 sleep "${TIMELY_FAKE_DDC_DELAY:-0.4}"
 
 bus=""

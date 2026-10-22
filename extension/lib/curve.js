@@ -41,13 +41,15 @@ export function levelAt(elevation, dusk, night) {
 }
 
 /**
- * The sun's path through the local calendar day containing `date`, for
- * drawing. `samples` includes the exact moments the sun crosses each
- * threshold, so a polyline through them has its corners in the right places.
+ * The sun's path through the local calendar day containing `date`, as
+ * `clock` moves it, for drawing. Times are clock times. `samples` includes the
+ * exact moments the sun crosses each threshold, so a polyline through them has
+ * its corners in the right places.
  *
  * @param {Date} date
  * @param {number} latitude
  * @param {number} longitude
+ * @param {import('./clock.js').SunClock} clock
  * @returns {{
  *   start: Date, end: Date,
  *   samples: {time: Date, elevation: number}[],
@@ -55,14 +57,17 @@ export function levelAt(elevation, dusk, night) {
  *   darkSpans: [Date, Date][],
  * }}
  */
-export function sunDay(date, latitude, longitude) {
+export function sunDay(date, latitude, longitude, clock) {
     const start = new Date(date);
     start.setHours(0, 0, 0, 0);
     // Not start + 24 h: days that change to or from summer time are 23 or 25 h long.
     const end = new Date(start);
     end.setDate(end.getDate() + 1);
 
-    const crossingsOf = elevation => crossings(start, end, latitude, longitude, elevation);
+    const elevationAt = time => sunElevation(clock.toSun(time), latitude, longitude);
+    const crossingsOf = elevation =>
+        crossings(clock.toSun(start), clock.toSun(end), latitude, longitude, elevation)
+            .map(time => clock.toClock(time));
     const duskTimes = crossingsOf(DUSK_ELEVATION);
     const nightTimes = crossingsOf(NIGHT_ELEVATION);
 
@@ -72,13 +77,13 @@ export function sunDay(date, latitude, longitude) {
     times.push(end);
     times.sort((a, b) => a - b);
 
-    const samples = times.map(time => ({time, elevation: sunElevation(time, latitude, longitude)}));
+    const samples = times.map(time => ({time, elevation: elevationAt(time)}));
 
     const edges = [start, ...duskTimes, end];
     const darkSpans = [];
     for (let i = 0; i + 1 < edges.length; i++) {
         const middle = new Date((edges[i].getTime() + edges[i + 1].getTime()) / 2);
-        if (sunElevation(middle, latitude, longitude) < DUSK_ELEVATION)
+        if (elevationAt(middle) < DUSK_ELEVATION)
             darkSpans.push([edges[i], edges[i + 1]]);
     }
 

@@ -5,6 +5,7 @@ import Gtk from 'gi://Gtk';
 
 import {ExtensionPreferences, gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
+import {SunClock} from './lib/clock.js';
 import {HORIZON, crossings} from './lib/sun.js';
 
 function parseMonitors(settings) {
@@ -13,6 +14,39 @@ function parseMonitors(settings) {
     } catch {
         return {};
     }
+}
+
+function timeSpin(upper, step, value) {
+    const spin = new Gtk.SpinButton({
+        adjustment: new Gtk.Adjustment({lower: 0, upper, step_increment: step, page_increment: 3 * step, value}),
+        numeric: true,
+        wrap: true,
+    });
+    // So that times read 07:05, not 7:5.
+    spin.connect('output', () => {
+        spin.set_text(String(spin.get_value_as_int()).padStart(2, '0'));
+        return true;
+    });
+    return spin;
+}
+
+/** A row editing a setting held as minutes after midnight. */
+function timeRow(title, subtitle, settings, key) {
+    const minutes = settings.get_int(key);
+    const hours = timeSpin(23, 1, Math.floor(minutes / 60));
+    const mins = timeSpin(59, 5, minutes % 60);
+    const save = () => settings.set_int(key, 60 * hours.get_value_as_int() + mins.get_value_as_int());
+    hours.connect('value-changed', save);
+    mins.connect('value-changed', save);
+
+    const box = new Gtk.Box({spacing: 6, valign: Gtk.Align.CENTER});
+    box.append(hours);
+    box.append(new Gtk.Label({label: ':'}));
+    box.append(mins);
+
+    const row = new Adw.ActionRow({title, subtitle});
+    row.add_suffix(box);
+    return row;
 }
 
 function spinRow(title, subtitle, lower, upper, digits) {
@@ -38,6 +72,7 @@ export default class TimelyBrightnessPreferences extends ExtensionPreferences {
 
         const page = new Adw.PreferencesPage();
         page.add(this._locationGroup(settings, watch));
+        page.add(this._rhythmGroup(settings));
         page.add(this._monitorsGroup(settings, watch));
         window.add(page);
     }
@@ -64,19 +99,49 @@ export default class TimelyBrightnessPreferences extends ExtensionPreferences {
             .format(clockFormat === '12h' ? '%l:%M %p' : '%R').trim();
 
         const showToday = () => {
-            const start = new Date();
+            const now = new Date();
+            const start = new Date(now);
             start.setHours(0, 0, 0, 0);
             const end = new Date(start);
             end.setDate(end.getDate() + 1);
-            const times = crossings(start, end,
-                settings.get_double('latitude'), settings.get_double('longitude'), HORIZON);
-            today.subtitle = times.length === 2
-                ? _('Sunrise %s · Sunset %s').format(format(times[0]), format(times[1]))
-                : _('The sun neither rises nor sets today');
+            const location = [settings.get_double('latitude'), settings.get_double('longitude')];
+            const times = crossings(start, end, ...location, HORIZON);
+            if (times.length !== 2) {
+                today.subtitle = _('The sun neither rises nor sets today');
+                return;
+            }
+
+            const weight = settings.get_int('rhythm-weight') / 100;
+            const clock = new SunClock(now, ...location, {
+                morning: settings.get_int('morning-time'),
+                evening: settings.get_int('evening-time'),
+                weight,
+            });
+            const show = time => (weight
+                ? `${format(time)} → ${format(clock.toClock(time))}`
+                : format(time));
+            today.subtitle = _('Sunrise %s · Sunset %s').format(show(times[0]), show(times[1]));
         };
-        watch('changed::latitude', showToday);
-        watch('changed::longitude', showToday);
+        for (const key of ['latitude', 'longitude', 'morning-time', 'evening-time', 'rhythm-weight'])
+            watch(`changed::${key}`, showToday);
         showToday();
+
+        return group;
+    }
+
+    _rhythmGroup(settings) {
+        const group = new Adw.PreferencesGroup({
+            title: _('Daily Rhythm'),
+            description: _('Sunrise and sunset are pulled toward these times, so screens stay bright ' +
+                'through winter afternoons and dim in good time on summer evenings.'),
+        });
+
+        group.add(timeRow(_('Morning'), _('Sunrise is pulled toward this time'), settings, 'morning-time'));
+        group.add(timeRow(_('Evening'), _('Sunset is pulled toward this time'), settings, 'evening-time'));
+
+        const weight = spinRow(_('Weight'), _('0 % follows the sun; 100 % keeps to these times'), 0, 100, 0);
+        settings.bind('rhythm-weight', weight, 'value', Gio.SettingsBindFlags.DEFAULT);
+        group.add(weight);
 
         return group;
     }

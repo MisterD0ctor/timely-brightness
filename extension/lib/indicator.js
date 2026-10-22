@@ -31,7 +31,10 @@ class Indicator extends PanelMenu.Button {
         this._graph = new DayGraph();
         this._graph.connect('level-changed', () => this._syncCaption());
         this._graph.connect('drag-end', () => controller.setLevels(this._graph.levels));
-        const graphItem = new PopupMenu.PopupBaseMenuItem({reactive: false, can_focus: false});
+        // Reactive but inert, rather than `reactive: false`: St marks a
+        // non-reactive item insensitive, and the theme greys out its colours,
+        // which the graph draws its handles with.
+        const graphItem = new PopupMenu.PopupBaseMenuItem({activate: false, hover: false, can_focus: false});
         graphItem.add_child(this._graph);
         this.menu.addMenuItem(graphItem);
 
@@ -109,9 +112,6 @@ class Indicator extends PanelMenu.Button {
             this._slider.value = level / 100;
             this._syncing = false;
         }
-
-        if (this.menu.isOpen)
-            this._syncGraph();
     }
 
     _syncGraph() {

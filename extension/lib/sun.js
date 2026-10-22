@@ -85,16 +85,3 @@ export function crossings(from, until, latitude, longitude, elevation) {
     }
     return found;
 }
-
-/**
- * The next sunrise or sunset after `date`, or null in a polar day or night.
- *
- * @param {Date} date
- * @param {number} latitude
- * @param {number} longitude
- * @returns {Date | null}
- */
-export function nextSunriseOrSunset(date, latitude, longitude) {
-    const until = new Date(date.getTime() + 2 * DAY_MS);
-    return crossings(date, until, latitude, longitude, HORIZON)[0] ?? null;
-}
